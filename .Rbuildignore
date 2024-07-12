@@ -1,3 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^btbaseline\.Rproj$
+docs
+dev
+vignettes
+

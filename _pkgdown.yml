@@ -1,0 +1,22 @@
+url: https://github.com/soilwaterfish/btbr/
+template:
+  package: rrmtemplate
+navbar:
+  left:
+    - icon: fa-home
+      href: index.html
+  right:
+    - text: "Vignettes"
+      icon: fas fa-book
+      menu:
+      -  text: Intergrated Call
+         href: articles/integrated.html
+      -  text: Sediment Indicator
+         href: articles/developing_sediment.html
+      -  text: Stream Temperature Indicator
+         href: articles/stream_temperature.html
+    - text: "reference"
+      href: reference/index.html
+    - icon: fa fa-github fa-lg
+      text: "github"
+      href: https://github.com/soilwaterfish/btbr/

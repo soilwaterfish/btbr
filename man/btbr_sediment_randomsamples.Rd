@@ -20,3 +20,20 @@ A \link[dplyr]{tibble} with new variable \code{proportion}.
 This is a \strong{very} specific function used for the BTB model so likely won't be useful for others. The outputs of this function are used to
 for proportion of road-related sediment to natural erosion in the Bayesian linear model.
 }
+\examples{
+
+data <- btbr_tss()
+
+granitic_dist <- btbr_batch_distribution(data \%>\% dplyr::filter(geology == 'Granitic'),
+                                         value = value_tons_mi2_yr,
+                                         method = 'mge')
+
+
+sedimentary_dist <- btbr_batch_distribution(data \%>\% dplyr::filter(geology == 'Sedimentary'),
+                                            value = value_tons_mi2_yr,
+                                            method = 'mge')
+
+btbr_rs <- btbr_sediment_randomsamples(usfs = TRUE,
+                                       sedimentary_dist = sedimentary_dist[['lpearson']],
+                                       granitic_dist = granitic_dist[['lognorm']])
+}

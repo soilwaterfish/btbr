@@ -1,5 +1,5 @@
 Package: btbr
-Title: Bull Trout Baseline Scripts.
+Title: Model Risk for Western Montana Bull Trout Baseline.
 Version: 0.1
 Authors@R: 
     person("Josh", "Erickson", , "joshua.l.erickson@usda.gov", role = c("aut", "cre"),

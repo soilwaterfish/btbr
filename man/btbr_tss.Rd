@@ -24,6 +24,10 @@ The \code{geology} methods currently available:
 \item  \strong{sedimentary}: These values are taken from \insertCite{region1tss2024}{btbr}.
 }
 }
+\examples{
+data <- btbr_tss()
+
+}
 \references{
 {
 \insertAllCited{}
