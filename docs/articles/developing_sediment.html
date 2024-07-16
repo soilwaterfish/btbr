@@ -96,18 +96,274 @@
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">btbr</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">btbr</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Loading required package: evd</span></span>
+<span><span class="co">#&gt; Loading required package: smwrBase</span></span>
+<span><span class="co">#&gt; Loading required package: lubridate</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Attaching package: 'lubridate'</span></span>
+<span><span class="co">#&gt; The following objects are masked from 'package:base':</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;     date, intersect, setdiff, union</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Attaching package: 'dplyr'</span></span>
+<span><span class="co">#&gt; The following objects are masked from 'package:smwrBase':</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;     coalesce, pick, recode</span></span>
+<span><span class="co">#&gt; The following objects are masked from 'package:stats':</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;     filter, lag</span></span>
+<span><span class="co">#&gt; The following objects are masked from 'package:base':</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;     intersect, setdiff, setequal, union</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://wilkelab.org/ggtext/" class="external-link">ggtext</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://wilkelab.org/cowplot/" class="external-link">cowplot</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Attaching package: 'cowplot'</span></span>
+<span><span class="co">#&gt; The following object is masked from 'package:lubridate':</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;     stamp</span></span></code></pre></div>
+<div class="section level2">
+<h2 id="findings">Findings<a class="anchor" aria-label="anchor" href="#findings"></a>
+</h2>
+<ul>
+<li><p>We can model the error associated with both specific area road
+and background erosion rates to help us get a posterior predictive (PP)
+distribution for the sediment indicator rating.</p></li>
+<li><p>Overall, as specific area road erosion rates increase, the
+proportion compared to background also increases. However, these changes
+to the predictors and response depend on geologic parent material,
+e.g. granitic vs sedimentary. The model was able to account for this
+structure by incorporating geology as a predictor variable.</p></li>
+<li><p>By adding weak and uninformative priors to the model parameters
+we were able to limit any potential overfitting that might occur due to
+the data generated process.</p></li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="discussion">Discussion<a class="anchor" aria-label="anchor" href="#discussion"></a>
+</h2>
+<ul>
+<li><p>Due to the uncertainty in the GRAIP-Lite model and short-term
+background erosion rates, we needed to incorporate <em>uncertainty</em>
+into the final rating and to do this we used Bayesian methods to capture
+a probability distribution of ratings per bull trout baseline (BTB)
+demarcation.</p></li>
+<li><p>Further exploration into Belt Supergroup background erosion rates
+is warranted. Having a more updated central tendency and variance will
+help with the model predictions.</p></li>
+<li><p>Being able to model the areas (BTB demarcations) with
+probabilities will help when applying final integrated calls to the
+Bayesian network framework.</p></li>
+</ul>
+</div>
 <div class="section level2">
 <h2 id="intro">Intro<a class="anchor" aria-label="anchor" href="#intro"></a>
 </h2>
-<p>This shows the process that was used to develop the Total Suspended
-Sediment (mg/L) loads per year. These were then used to provide some
-randomness in the final proportion of roads to background sediment
-model.</p>
-<p>Data was collected from two different forests within the Bull Trout
-Baseline domain: Kootenai NF and Flathead NF.</p>
+<p>This is a dive into the derivation of the bull trout baseline (BTB)
+sediment indicator. This analysis focuses on comparing road specific
+sediment delivery by area to specific area background erosion rates (all
+based on kg/km<sup>2</sup>/yr) to get a proportion of road-generated
+sedimentation to natural short-term erosion. We built uncertainty into
+the model from multiple distributions (roads and background) stratified
+by parent geologic material (granitic and sedimentary). In addition, we
+use a Bayesian regression model to sample from the posterior to get a
+probabilistic distribution.</p>
+<div class="section level3">
+<h3 id="steps">Steps<a class="anchor" aria-label="anchor" href="#steps"></a>
+</h3>
+<ol style="list-style-type: decimal">
+<li><strong>Build Uncertainty <em>into</em> the model</strong></li>
+</ol>
+<p>We might be inclined to just take an average background erosion rate
+(mean in Figure 1 below) and modeled GRAIP-Lite value and calculate the
+estimated proportion. In our case we want the distribution to be the
+estimate!</p>
+<pre><code><span><span class="co">#&gt; Scale for <span style="color: #00BB00;">x</span> is already present.</span></span>
+<span><span class="co">#&gt; Adding another scale for <span style="color: #00BB00;">x</span>, which will replace the existing scale.</span></span></code></pre>
+<div class="figure">
+<img src="developing_sediment_files/figure-html/unnamed-chunk-2-1.png" alt="Figure 1" width="150%"><p class="caption">
+Figure 1
+</p>
 </div>
-  </main>
+<ol start="2" style="list-style-type: decimal">
+<li><strong>Model</strong></li>
+</ol>
+<p>We want to model the response as a <span class="math inline">\(\text{Beta}\)</span> distribution since it is
+bounded between 0 and 1. In addition, we modeled weak priors (high
+sigma) with both covariates (background erosion rates and GRAIP-lite
+specific area erosion rates) to account for the uncertainty associated
+<span class="math inline">\(\beta\)</span> since we really have no prior
+knowledge of this relationship (<span class="math inline">\(Y
+\sim\beta_i\)</span>)</p>
+<p><span class="math display">\[
+Y_i \sim \text{Beta}(\mu_i, \phi) \\
+\text{logit}(\mu_i) = \beta_0 + \beta_1\text{Natural} +
+\beta_2\text{Roads} + \beta_3\text{Geology} \\
+\beta_0=\text{Normal}(0,1) \\
+\beta_1,\beta_2=\text{Normal}(0,2) \\
+\beta_3=\text{uniform}(0,1) \\
+\phi = \text{Gamma}(0.01, 0.01)
+\]</span></p>
+<ol start="3" style="list-style-type: decimal">
+<li><strong>Posterior Predictive</strong></li>
+</ol>
+<p>Once we fit the model, we can then sample from the posterior to get a
+posterior predictive distribution.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="build-uncertainty">Build Uncertainty<a class="anchor" aria-label="anchor" href="#build-uncertainty"></a>
+</h2>
+<p>First, we need to get an idea of how we could add uncertainty to our
+sediment indicator. One way to do this is look for other data (graphs,
+tables, expert opinion, etc) and model a theoretical distribution from
+said data sources. This approach has it’s caveats for sure (bias,
+uninformed, non-causal relationships) but is much more robust than just
+taking a point estimate with no uncertainty when done responsibly. Based
+on domain knowledge, we are assuming two dominant geologic types:
+granitic and sedimentary. We understand that there is going to be a loss
+of heterogeneity in our stratification but hope that our adjusted model
+uncertainty can lessen this error. To infer background erosion rates we
+took data from <span class="citation">Kirchner et al. (2001)</span> and
+a reference to a sedimentary erosion rate from the Idaho DEQ TMDL for
+the North Fork CDA. This data was used as a starting point from which
+uncertainty was applied. Kirchner data was for granitic parent material
+and Idaho DEQ was for sedimentary parent material.</p>
+<div class="section level3">
+<h3 id="granitic">Granitic<a class="anchor" aria-label="anchor" href="#granitic"></a>
+</h3>
+<p>The Kirchner data provides us with more than just a single specific
+area erosion rate. We took short-term rates (10-28 years) within 2.5-300
+sq.km’s drainage areas within forested catchments as our empirical data.
+From these data, we then used the lognormal distribution as our
+theoretical basis. Reasons to use the lognormal distribution were due to
+the relatively thin tail towards zero and modest tailedness to the right
+of the central tendency. As you can see in Figure 2 below, we modeled
+the empirical data with a theoretical one where the central tendency
+(23.248) and variation (3.875) came from the left panel graph in Figure
+2.</p>
+</div>
+<div class="section level3">
+<h3 id="sedimentary">Sedimentary<a class="anchor" aria-label="anchor" href="#sedimentary"></a>
+</h3>
+<p>The belt group coefficients were taken from the Idaho DEQ TMDL. This
+needs more work but ultimately works out to be around 5,155
+kg/km<sup>2</sup>/yr with no inferred variance so we just assume a
+similar variance to the granitics, not perfect but going with the idea
+that we are likely wrong (error building). Below we converted the
+ton/acre/year in the left graph to kg/km<sup>2</sup>/year to get a
+lognormal distribution like the granitics. The same rationale for a
+lognormal in the grantics applied for the sedimentary group as well.</p>
+</div>
+<div class="section level3">
+<h3 id="graip-lite">GRAIP-Lite<a class="anchor" aria-label="anchor" href="#graip-lite"></a>
+</h3>
+<p>GRAIP-Lite uses a similar method to categorize the baserate by
+geologic parent material. With that comes empirical data as well (see
+below). In this analysis we used 21 kg/yr/m for granitics and 14 kg/yr/m
+for sedimentary. We then converted the specific sediment delivered by
+area (<code>specdelFS_HA</code>) from the WCATT national model run by
+appropriate geologic base rates. In addition, we added error to the
+modeled <code>specdelFS_HA</code> values based on accumulated road
+length. This is due to the error decreasing as you accumulate more roads
+when compared to GRAIP. Once this was done, we then had a empirical
+distribution of specific sediment delivered by area in western Montana
+within USDA-Forest Service administration lands.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="model">Model<a class="anchor" aria-label="anchor" href="#model"></a>
+</h2>
+<div class="section level3">
+<h3 id="geology">Geology<a class="anchor" aria-label="anchor" href="#geology"></a>
+</h3>
+<p>We need to account for granitic and sedimentary parent material so
+somehow we need to figure out the most dominant one in the HUC. We do
+this by intersecting coarse geology map by parent material and then for
+each HUC take the one with the highest proportion. From there we
+consider a HUC ‘granitic’ or ‘sedimentary’ based on this crude
+method.</p>
+<div class="figure">
+<img src="www/images/geology.png" alt="Figure 5" width="100%"><p class="caption">
+Figure 5
+</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="bayesian-model">Bayesian Model<a class="anchor" aria-label="anchor" href="#bayesian-model"></a>
+</h3>
+<p>With all of the pre-processing done we can start to build the model.
+We went with a Bayesian model for a couple reasons; 1). the Bayesian
+model is able to provide a distribution of the likelihoods which can
+then be used as probabilities (great for Bayesian network), 2). being
+able to add weak or uninformative priors to the model parameters (betas,
+intercept, etc) helps with the inherent uncertainty and limits model
+overfitting.</p>
+<p>To do this we need to use the data we generated prior and build up a
+faux model with uncertainty (Figure 6 light blue lines <span class="math inline">\(y_\text{rep}\)</span>) so we can then take our
+empirical estimates (Figure 6 dark blue line <span class="math inline">\(y\)</span>) to predict. When we predict with the
+empirical estimates, it will then give us that uncertainty that we built
+into the model.</p>
+<p>Here is the model below in the code chunk. We just take our data
+generated from Figure 2, 3, and 4 compute the proportion and then model.
+Essentially what we are doing is sampling from inferred distributions,
+calculating a proportion, and then repeating. We can do this since our
+data is split by geologic group and when that happens our data is now
+exchangeable, meaning we can have a low road erosion with a low base
+erosion and vice versa. This is great because we can then theoretically
+sample as many events as we’d like!</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>priors.weak <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">1</span>),<span class="at">class =</span> <span class="st">'b'</span>, <span class="at">coef =</span> <span class="st">'spec_delFS'</span>),</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>                   <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">class =</span> <span class="st">'b'</span>, <span class="at">coef =</span> <span class="st">'base_erosion'</span>),</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>                   <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">class =</span> <span class="st">'Intercept'</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>                 )</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>sed_mod <span class="ot">&lt;-</span> <span class="fu">brm</span>(</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  proportion <span class="sc">~</span> spec_delFS <span class="sc">+</span> base_erosion <span class="sc">+</span> ig_or_not,</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">Beta</span>(),</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">prior =</span> priors.weak,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">data =</span> sed_sim_filt)</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="er">)</span></span></code></pre></div>
+<div class="figure">
+<img src="www/images/pp_check.png" alt="Figure 6" width="150%"><p class="caption">
+Figure 6
+</p>
+</div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="posterior-predictive">Posterior Predictive<a class="anchor" aria-label="anchor" href="#posterior-predictive"></a>
+</h2>
+<p>Now that we built the model we can now use it on the empirical data
+we set out to use in the first place! All we do is predict with the
+model and then we get back a posterior predictive distribution. I won’t
+go into any more detail as it’s beyond the scope of this report but just
+know that the likelihoods generated from the model parameters with
+priors and sampling (MCMC) can shortcut complicated calculus to give us
+a probability distribution (see below)!</p>
+<p>Below, is a few PP distributions with some of the empirical data. You
+can see how now we can get a range of probabilities and depending on the
+rating (FA, FAR, FUR) demarcation we can now add this information to the
+Bayesian network to help us with some decision making.</p>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Kirchner, James W., et al. “Mountain erosion over 10 yr, 10 ky, and
+10 my time scales.” Geology 29.7 (2001): 591-594.</p>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-kirchner2001mountain" class="csl-entry">
+Kirchner, James W, Robert C Finkel, Clifford S Riebe, Darryl E Granger,
+James L Clayton, John G King, and Walter F Megahan. 2001.
+<span>“Mountain Erosion over 10 Yr, 10 Ky, and 10 My Time
+Scales.”</span> <em>Geology</em> 29 (7): 591–94.
+</div>
+</div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 

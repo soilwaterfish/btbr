@@ -2,6 +2,7 @@
 
 export(btbr_batch_distribution)
 export(btbr_brm)
+export(btbr_hucs)
 export(btbr_pp)
 export(btbr_sediment_randomsamples)
 export(btbr_tss)

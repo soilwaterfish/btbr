@@ -1,31 +1,4 @@
 
-#' Get Posterior Predictive (PP)
-#' @description
-#' This function takes the results from the \link[btbr_brm]{brbr} model and performs posterior predictive (PP) summaries for
-#' each Hydrological Unit Code (HUC12). The PP distribution is then split into three categories: Functioning Acceptably (FA),
-#' Functioning at Acceptable Risk (FAR), and Functioning at Unacceptable Risk (FUR) where the cutoffs are 0-0.1 (FA), 0.1-0.3 (FAR), and
-#' 0.3-1 (FAR).
-#'
-#' @param A data.frame with appropriate covariates to predict with from previous model, e.g. `natural_erosion`, `spec_delFS`, `ig_or_not`, etc.
-#' @param btbr_brm A previously created \link[btbr_brm]{brbr} model.
-#'
-#' @return A data.frame.
-#' @export
-#'
-#' @examples
-btbr_pp <- function(data, btbr_brm) {
-
-
-  data <- data %>% dplyr::mutate(id = dplyr::row_number())
-
-  predictions <- brms::posterior_predict(btbr_brm, newdata = data) %>% as.data.frame() %>% dplyr::tibble()
-
-  custom_pp_thresholds <- proportion_function(predictions)
-
-  dplyr::left_join(data, custom_pp_thresholds) %>%
-    dplyr::select(-id)
-}
-
 #' Fit Bayesian Linear Model
 #'
 #' @param btbr_rs A previously created \link[btbr_sediment_randomsamples]{btbr} object.
@@ -103,15 +76,8 @@ if(linear){
 
 btbr_sediment_randomsamples <- function(usfs = TRUE, sedimentary_dist, granitic_dist) {
 
-  if(usfs){
 
-  btb_hucs <- sf::read_sf('data/btb_data.gpkg', layer = 'btb_hucs_fs')
-
-  } else {
-
-  btb_hucs <- sf::read_sf('data/btb_data.gpkg', layer = 'btb_hucs')
-
-  }
+  btb_hucs <- btbr_hucs(usfs = usfs)
 
   set.seed(1234)
 
@@ -121,12 +87,12 @@ btbr_sediment_randomsamples <- function(usfs = TRUE, sedimentary_dist, granitic_
                                         {b <- btb_hucs$tlenFS
                                         error <- rnorm(nhucs, sd = 1/(b+0.001))
                                         a <- btb_hucs$specdelFS_HA*1000*14*error
-                                        (btb_hucs$specdelFS_HA*1000*14 + a)*0.00285497
+                                        (btb_hucs$specdelFS_HA*1000*14 + a)*0.00285497 # converting to tons and using sedimentary geologic base rate from GRAIP_Lite
                                         },{
                                           b <- btb_hucs$tlenFS
                                           error <- rnorm(nhucs, sd = 1/(b+0.001))
                                           a <- btb_hucs$specdelFS_HA*1000*21*error
-                                          (btb_hucs$specdelFS_HA*1000*21.3 + a)*0.00285497
+                                          (btb_hucs$specdelFS_HA*1000*21.3 + a)*0.00285497 # converting to tons and using granitic geologic base rate from GRAIP_Lite
                                         }),
                     natural_erosion = ifelse(btb_hucs$ig_or_not == 'sedimentary',
                                       smwrBase::rlpearsonIII(10000,
@@ -147,10 +113,12 @@ btbr_sediment_randomsamples <- function(usfs = TRUE, sedimentary_dist, granitic_
                                      btb_hucs$specdelFS_HA*1000*14*0.00285497, # converting to tons and using sedimentary geologic base rate from GRAIP_Lite
                                      btb_hucs$specdelFS_HA*1000*21.3*0.00285497 # converting to tons and using granitic geologic base rate from GRAIP_Lite
                     )
-                    ) %>%
-                    dplyr::mutate(spec_delFS = dplyr::if_else(spec_delFS <= 0, 0.0001, spec_delFS), # removing zero's to avoid zero inflation potentially....
-                                  proportion = spec_delFS/(spec_delFS+natural_erosion)) %>%
-                    dplyr::filter(proportion > 0, proportion < 1)
+                    ) %>% dplyr::mutate(
+                      spec_delFS = dplyr::case_when(spec_delFS <= 0 & road_length == 0 ~ 0,
+                                                    spec_delFS <= 0 & road_length > 0 ~ 0.01,
+                                                    TRUE ~ spec_delFS),
+                      proportion = spec_delFS/(spec_delFS+natural_erosion)) %>%
+                      dplyr::filter(proportion > 0, proportion < 1) # removing zero's to avoid zero inflation potentially....
 
 }
 
@@ -507,32 +475,5 @@ btbr_granitic <- function() {
     dplyr::select(station_number,station_name, area_mi2,
                   value_tons_mi2_yr, area_km2, value_tons_km2_yr,
                   total_samples)
-
-}
-
-#' Posterior Predictive Percentage
-#' @description
-#' This function creates the splits in the PP.
-#'
-#'
-#' @param data A previously created posterior prediction.
-#'
-#' @return A data.frame
-proportion_function <- function(data) {
-
-  ratings <- data.frame(fa = vector(), far = vector(), fur = vector(), id = vector())
-
-  for(i in 1:length(data)){
-    fa <- sum(data[,i] < 0.1)/nrow(data)
-    far <- sum(data[,i] >= 0.1 & data[,i] < 0.3)/nrow(data)
-    fur <- sum(data[,i] > 0.3)/nrow(data)
-
-    ratings[i,'fa'] <- fa
-    ratings[i,'far'] <- far
-    ratings[i,'fur'] <- fur
-    ratings[i, 'id'] <- i
-  }
-
-  ratings
 
 }

@@ -32,7 +32,7 @@ const baseLayers = {
   }
 
 
-
+/*
 function getColor(d) {
  return d > 0.9 ? "#47039FFF" :
   d  > 0.8 ? "#7301A8FF" :
@@ -46,10 +46,22 @@ function getColor(d) {
              "#6c9ad5" ;
 
 }
+*/
+
+function getColor(d) {
+ switch(d){
+
+  case 'fa': return "#228b22";
+  case 'far': return "#E69F00";
+ case 'fur': return "#b22222";
+ default: return  "ffffff";
+}
+}
+
 
 function style(feature) {
     return {
-        fillColor: getColor(feature.properties.specdelFS_HA),
+        fillColor: getColor(feature.properties.final_risk),
         weight: 0.25,
         opacity: 1,
         color: 'white',
@@ -60,8 +72,15 @@ function style(feature) {
 
 var popupFunc = function(feature) {
 
-  return  '<strong><center><div style="font-size:14px;">Summary Table</div></center></strong><br>'+ '<div class="box" style="background-color:' + getColor(feature.properties.specdelFS_HA) + '"></div> <br>' +
-          '<div style="font-size:8px;"><b>Specific Sediment Delivery: </b>' + String(Math.round((Number(feature.properties.specdelFS_HA))*10)/10) + '</strong><br><b>HUC 12: </b>' + feature.properties.HUC_12 +'</div>'
+  return  '<strong><center><div style="font-size:14px;">Summary Table</div></center></strong>'+
+          '<div style="font-size:11px;"><b>Final Risk: </b>' + feature.properties.final_risk + '<div class="box" style="background-color:' + getColor(feature.properties.final_risk) + '"></div> ' +
+          '</strong><br><b>Proportion: </b>' + String(Math.round((Number(feature.properties.proportion))*100)/100) +
+          '</strong><br><b>FA: </b>' + String(Math.round((Number(feature.properties.fa))*100)/100) +
+          '</strong><br><b>FAR: </b>' + String(Math.round((Number(feature.properties.far))*100)/100) +
+          '</strong><br><b>FUR: </b>' + String(Math.round((Number(feature.properties.fur))*100)/100) +
+          '</strong><br><b>Specific Sediment Delivery: </b>' + String(Math.round((Number(feature.properties.spec_delFS))*100)/100) +
+          '</strong><br><b>Road Length (mi): </b>' + String(Math.round((Number(feature.properties.road_length))*0.621371*100)/100) +
+          '</strong><br><b>HUC 12: </b>' + feature.properties.huc12 +'</div>'
 
 }
 
@@ -134,7 +153,7 @@ markers_pibo.addLayer(pibo);
 layerControls.addOverlay(markers_pibo, 'PIBO Monitoring Sites')
 
 });
-
+/*
 var legend = L.control({position: 'bottomright'});
 
 legend.onAdd = function (map) {
@@ -156,7 +175,7 @@ legend.onAdd = function (map) {
 };
 
 legend.addTo(map);
-
+*/
 
 const layerControls = L.control.layers(baseLayers, {}, {}).addTo(map);
 
@@ -189,7 +208,7 @@ L.Control.MyControl = L.Control.extend({
   },
   onAdd: function(map) {
     var button = L.DomUtil.create('button', 'open-modal-btn');
-    button.innerText='Scoring Matrix';
+    button.innerText='Bayesian Network';
     button.onclick = function() {
       var myModal = new bootstrap.Modal(document.getElementById('myModal'));
       myModal.show();
@@ -232,9 +251,9 @@ var downloadControl = L.Control.extend({
 
 map.addControl(new downloadControl());
 
-var scoringMatrix = document.getElementById('scoringMatrix');
+var bayesnet = document.getElementById('bayesnet');
 
-scoringMatrix.onclick = function() {
+bayesnet.onclick = function() {
       var myModal = new bootstrap.Modal(document.getElementById('myModal'));
       myModal.show();
     }
