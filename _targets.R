@@ -5,11 +5,14 @@
 
 # Load packages required to define the pipeline:
 library(targets)
-# library(tarchetypes) # Load other packages as needed.
+library(tarchetypes)
+library(future)
+library(future.callr)
+plan(callr)
 
 # Set target options:
 tar_option_set(
-  packages = c("btbr", "dplyr")
+  packages = c("btbr", "furrr", "sf", "tidyverse")
 )
 
 # Replace the target list below with your own:
@@ -32,10 +35,12 @@ list(
                                          sedimentary_dist = sedimentary_dist[['lpearson']],
                                          granitic_dist = granitic_dist[['lognorm']])),
 
-    tar_target(btbr_sedmod, btbr_brm(btbr_rs, linear = TRUE)),
+    tar_target(btbr_sedmod, btbr_brm_sediment(btbr_rs, linear = TRUE)),
+
+    tar_target(btb_hucs, btbr_hucs()),
 
 
-    tar_target(unroaded_hucs, btbr_hucs() %>%
+    tar_target(unroaded_hucs, btb_hucs %>%
                  dplyr::filter(specdelFS_HA == 0) %>%
                  sf::st_drop_geometry() %>%
                  dplyr::select(spec_delFS = 'specdelFS_HA',
@@ -51,16 +56,33 @@ list(
                                            as.numeric(exp(sedimentary_dist[['lpearson']]$estimate[['meanlog']])),
                                            as.numeric(exp(granitic_dist[['lognorm']]$estimate[['meanlog']]))))),
 
-    tar_target(pps, btbr_pp(btbr_brm = btbr_sedmod, data = fake_data, indicator = 'sediment')),
+    tar_target(pps_sed, btbr_pp(btbr_brm = btbr_sedmod, data = fake_data, indicator = 'sediment')), # remember to change proportion....
 
     tar_target(pps_final_sediment,
-                 btbr_hucs() %>%
+                 btb_hucs %>%
                  dplyr::select(huc12 = 'HUC_12') %>%
-                 dplyr::left_join(pps) %>%
+                 dplyr::left_join(pps_sed) %>%
                  sf::st_as_sf() %>%
-                 geojsonio::geojson_write(pps_final_sediment %>% sf::st_transform(4326), file = 'docs/btb_hucs.geojson'))
+                 geojsonio::geojson_write(pps_final_sediment %>% sf::st_transform(4326), file = 'docs/btb_hucs.geojson')),
 
     #### temperature workflow
+
+    tar_target(temp_query, btbr_norwest_temperature(sf::st_bbox(btb_hucs))),
+
+    tar_target(huc_comid, read.csv(system.file('data/comid_huc12.csv',package = 'btbr'))),
+
+    tar_target(wmt_norwest_temp, temp_query %>%
+                                 dplyr::filter(COMID %in% huc_comid$comid,
+                                               S1_93_11 > 0) %>%
+                                 dplyr::left_join(huc_comid, by = c('COMID' = 'comid')) %>%
+                                 dplyr::filter(!is.na(huc12))
+               ),
+
+    tar_target(wmt_norwest_temp_df, wmt_norwest_temp %>%
+                                    sf::st_drop_geometry()),
+
+    tar_target(btbr_tempmod, furrr::future_map(dplyr::group_nest(wmt_norwest_temp_df, huc12)$data,
+                                             purrr::safely(~btbr_brm_temperature(.x))))
 
 
 )

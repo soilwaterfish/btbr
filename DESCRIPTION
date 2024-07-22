@@ -13,10 +13,12 @@ Imports:
   sf,
   extRemes,
   fitdistrplus,
-  MGBT
+  MGBT,
+  arcgislayers
 Depends: 
   evd,
-  smwrBase
+  smwrBase,
+  brms
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

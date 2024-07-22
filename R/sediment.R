@@ -23,7 +23,7 @@
 #'                                        granitic_dist = granitic_dist[['lognorm']])
 #' btbr_sedmod <- btbr_brm(btbr_rs)
 
-btbr_brm <- function(btbr_rs, linear = TRUE) {
+btbr_brm_sediment <- function(btbr_rs, linear = TRUE) {
 
 if(linear){
   sed_mod <- brms::brm(
@@ -109,16 +109,20 @@ btbr_sediment_randomsamples <- function(usfs = TRUE, sedimentary_dist, granitic_
 
                     huc12 = btb_hucs$HUC_12,
 
-                    og_spec = ifelse(btb_hucs$ig_or_not == 'sedimentary',
+                    og_spec = ifelse(
+                                     btb_hucs$ig_or_not == 'sedimentary',
                                      btb_hucs$specdelFS_HA*1000*14*0.00285497, # converting to tons and using sedimentary geologic base rate from GRAIP_Lite
                                      btb_hucs$specdelFS_HA*1000*21.3*0.00285497 # converting to tons and using granitic geologic base rate from GRAIP_Lite
-                    )
-                    ) %>% dplyr::mutate(
-                      spec_delFS = dplyr::case_when(spec_delFS <= 0 & road_length == 0 ~ 0,
-                                                    spec_delFS <= 0 & road_length > 0 ~ 0.01,
-                                                    TRUE ~ spec_delFS),
-                      proportion = spec_delFS/(spec_delFS+natural_erosion)) %>%
-                      dplyr::filter(proportion > 0, proportion < 1) # removing zero's to avoid zero inflation potentially....
+                                     )
+                                    ) %>%
+                                      dplyr::mutate(
+                                            spec_delFS = dplyr::case_when(spec_delFS <= 0 & road_length == 0 ~ 0,
+                                                                          spec_delFS <= 0 & road_length > 0 ~ 0.01,
+                                                                          TRUE ~ spec_delFS),
+                                            proportion = spec_delFS/(spec_delFS+natural_erosion)) %>%
+                                            dplyr::filter(proportion > 0,
+                                                          proportion < 1
+                                                    ) # removing zero's to avoid zero inflation potentially....
 
 }
 

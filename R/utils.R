@@ -84,9 +84,9 @@ proportion_function <- function(data, indicator) {
            ratings <- data.frame(fa = vector(), far = vector(), fur = vector(), id = vector())
 
            for(i in 1:length(data)){
-             fa <- sum(data[,i] < 0.12)/nrow(data)
-             far <- sum(data[,i] >= 0.12 & data[,i] < 0.5)/nrow(data)
-             fur <- sum(data[,i] > 0.15)/nrow(data)
+             fa <- sum(data[,i] < 12)/nrow(data)
+             far <- sum(data[,i] >= 12 & data[,i] < 15)/nrow(data)
+             fur <- sum(data[,i] > 15)/nrow(data)
 
              ratings[i,'fa'] <- fa
              ratings[i,'far'] <- far

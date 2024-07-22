@@ -251,6 +251,34 @@ var downloadControl = L.Control.extend({
 
 map.addControl(new downloadControl());
 
+var SelectorControl = L.Control.extend({
+  options: { position: 'topright' // Position of the control
+},
+onAdd: function (map) {
+  var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom'); // Create the select element
+
+var select = L.DomUtil.create('select', 'form-select', container);
+                      select.innerHTML = `
+                                          <option value="column1">Column 1</option>
+                                          <option value="column2">Column 2</option>
+                                          <option value="column3">Column 3</option> `;
+
+        // Add change event listener to update the map
+        L.DomEvent.on(select, 'change', function (e) {
+          var selectedColumn = select.value;
+          updateMapData(selectedColumn);
+
+        }); // Prevent map interactions when interacting with the control
+
+        L.DomEvent.disableClickPropagation(container);
+        return container;
+
+}
+
+});
+
+map.addControl(new SelectorControl());
+
 var bayesnet = document.getElementById('bayesnet');
 
 bayesnet.onclick = function() {
@@ -264,6 +292,8 @@ finalScores.onclick = function() {
       var myScoreModal = new bootstrap.Modal(document.getElementById('finalScoresModal'));
       myScoreModal.show();
     }
+
+
 
 }
 

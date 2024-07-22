@@ -529,3 +529,9 @@ div.csl-indent {
   background-color: white;
 }
 
+
+#network {
+            width: 100%;
+            height: 600px;
+            border: 1px solid lightgray;
+        }
