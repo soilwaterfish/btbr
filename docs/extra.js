@@ -250,7 +250,7 @@ var downloadControl = L.Control.extend({
 });
 
 map.addControl(new downloadControl());
-
+/*
 var SelectorControl = L.Control.extend({
   options: { position: 'topright' // Position of the control
 },
@@ -276,9 +276,9 @@ var select = L.DomUtil.create('select', 'form-select', container);
 }
 
 });
-
 map.addControl(new SelectorControl());
 
+*/
 var bayesnet = document.getElementById('bayesnet');
 
 bayesnet.onclick = function() {

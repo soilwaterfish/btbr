@@ -13,5 +13,32 @@ btbr_hucs(usfs = TRUE)
 A sf MULTIPOLYGON.
 }
 \description{
-Get Bull Trout Baseline HUCs
+This function returns BTB HUCs with associated \href{https://research.fs.usda.gov/rmrs/products/dataandtools/datasets/road-density-proximity-and-erosion-data-and-stability-index}{GRAIP_Lite}
+attributes for Nation-wide Model Runs (Region 1) and dominant geology \insertCite{vuke2015geologic}{btbr}.
+}
+\details{
+The dataset attributes includes:
+
+\strong{GRAIP_Lite}: These attributes were accessed from \insertCite{nelson2021graiplite}{btbr} and use the \code{WCATT_HUCs_GL_Data_USC_Units_R01} layer.
+\itemize{
+\item \strong{HUC_12} Hydrological Unit Code 12.
+\item  \strong{specdelFS_NFSA} Sediment delivered per Square Mile in Standard tons per year per square mile (t/yr/sq.mi) on National Forest Systems Land.
+\item  \strong{specdel} Sediment delivered per Square Mile in Standard tons per year per square mile (t/yr/sq.mi) in HUC12.
+\item  \strong{sdelFS} Sediment delivered in Standard tons per year on National Forest Systems Land.
+\item  \strong{sdel} Sediment delivered in Standard tons per year in HUC12.
+\item  \strong{tlenFS} Road length in miles on National Forest Systems Land.
+\item  \strong{tlen} Road lenght in miles in HUC12.
+\item  \strong{FS_Land_sqmi} Area in Square Miles of National Forest Systems Land intersecting HUC12.
+\item  \strong{HUC12_sqmi} HUC 12 Area in Square Miles.
+\item \strong{fs_percent_land} Percentage of HUC12 that is National Forest Systems Land.
+}
+\strong{Geology}: These values are taken from \insertCite{vuke2015geologic}{btbr}.
+\itemize{
+\item \strong{ig_or_not}: Intersecting a coarse geology map by parent material and taking highest proportion (sedimentary and granitic).
+}
+}
+\references{
+{
+\insertAllCited{}
+}
 }

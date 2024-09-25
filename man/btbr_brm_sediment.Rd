@@ -7,7 +7,7 @@
 btbr_brm_sediment(btbr_rs, linear = TRUE)
 }
 \arguments{
-\item{btbr_rs}{A previously created \link[btbr_sediment_randomsamples]{btbr} object.}
+\item{btbr_rs}{A previously created \link[btbr]{btbr_sediment_randomsamples} object.}
 
 \item{linear}{Logical. Whether to run without spline or not, TRUE (default).}
 }
@@ -15,9 +15,19 @@ btbr_brm_sediment(btbr_rs, linear = TRUE)
 A \code{brmsfit} model object.
 }
 \description{
-Fit Bayesian Linear Model
+This function fits a \link[brms]{brm} model (see details below) to previously created \link[btbr]{btbr_sediment_randomsamples}.
+}
+\details{
+Below are the model parameter priors for the linear model. The nonlinear model using flat priors only.
+\deqn{Y_i \sim \text{Beta}(\mu_i, \phi) \\
+\text{logit}(\mu_i) = \beta_0 + \beta_1\text{Natural} + \beta_2\text{Roads} + \beta_3\text{Geology} \\
+\beta_0=\text{Normal}(0,1) \\
+\beta_1,\beta_2=\text{Normal}(0,2) \\
+\beta_3=\text{Normal}(0,1) \\
+\phi = \text{Gamma}(0.01, 0.01)}
 }
 \examples{
+\dontrun{
 data <- btbr_tss()
 
 granitic_dist <- btbr_batch_distribution(data \%>\% dplyr::filter(geology == 'Granitic'),
@@ -32,5 +42,7 @@ sedimentary_dist <- btbr_batch_distribution(data \%>\% dplyr::filter(geology == 
 btbr_rs <- btbr_sediment_randomsamples(usfs = TRUE,
                                        sedimentary_dist = sedimentary_dist[['lpearson']],
                                        granitic_dist = granitic_dist[['lognorm']])
-btbr_sedmod <- btbr_brm(btbr_rs)
+
+btbr_sedmod <- btbr_brm_sediment(btbr_rs)
+}
 }

@@ -9,47 +9,86 @@
 #' @param A data.frame with appropriate covariates to predict with from previous model, e.g. `natural_erosion`, `spec_delFS`, `ig_or_not`, etc.
 #' @param btbr_brm A previously created \link[btbr_brm]{brbr} model.
 #' @param indicator A character defining the type of indicator, e.g. 'sediment', 'temperature'.
+#' @param ... Arguments to pass to \link[posterior_predict]{brms}.
 #' @note The `indicator` argument is used to split the PP into custom thresholds previously defined.
 #' @return A data.frame.
 #' @export
 #'
 #' @examples
-btbr_pp <- function(data, btbr_brm, indicator) {
-
+btbr_pp <- function(data, btbr_brm, indicator, ...) {
 
   data <- data %>% dplyr::mutate(id = dplyr::row_number())
 
-  predictions <- brms::posterior_predict(btbr_brm, newdata = data) %>% as.data.frame() %>% dplyr::tibble()
+  predictions <- brms::posterior_predict(btbr_brm, ...) %>% as.data.frame() %>% dplyr::tibble()
 
   custom_pp_thresholds <- proportion_function(predictions, indicator = indicator)
 
   custom_pp_thresholds <- dplyr::left_join(data, custom_pp_thresholds) %>%
                           dplyr::select(-id)
 
-
   if(indicator == 'sediment'){
   final_risk <- custom_pp_thresholds %>%
                 dplyr::mutate(
-                fa = ifelse(road_length == 0, 100, fa),
+                fa = ifelse(road_length == 0, 1, fa),
                 far = ifelse(road_length == 0,  0, far),
-                fur = ifelse(road_length == 0, 0, fur)
+                fur = ifelse(road_length == 0, 0, fur),
+                fa = ifelse(is.na(proportion), NA_real_, fa),
+                far = ifelse(is.na(proportion),  NA_real_, far),
+                fur = ifelse(is.na(proportion), NA_real_, fur)
                 ) %>%
                 tidyr::pivot_longer(c(fa, far, fur)) %>%
                 dplyr::group_by(huc12) %>%
                 dplyr::mutate(final_risk = max(value),
-                              final_risk = ifelse(final_risk == value, name, NA_character_)) %>%
+                              final_risk = ifelse(final_risk == value, name, NA_character_),
+                              final_risk = ifelse(is.na(final_risk), NA_character_, final_risk)) %>%
                 dplyr::ungroup() %>%
-                reframe(huc12, final_risk) %>%
+                dplyr::reframe(huc12, final_risk) %>%
                 na.omit()
 
 
   custom_pp_thresholds <- custom_pp_thresholds %>%
                           dplyr::mutate(
-                          fa = ifelse(road_length == 0, 100, fa),
+                          fa = ifelse(road_length == 0, 1, fa),
                           far = ifelse(road_length == 0,  0, far),
-                          fur = ifelse(road_length == 0, 0, fur)
+                          fur = ifelse(road_length == 0, 0, fur),
+                          fa = ifelse(is.na(proportion), NA_real_, fa),
+                          far = ifelse(is.na(proportion),  NA_real_, far),
+                          fur = ifelse(is.na(proportion), NA_real_, fur)
                           ) %>%
                           dplyr::left_join(final_risk)
+  } else if (indicator == 'temperature'){
+
+    final_risk <- custom_pp_thresholds %>%
+                  tidyr::pivot_longer(c(fa, far, fur)) %>%
+                  dplyr::group_by(huc12) %>%
+                  dplyr::mutate(final_risk = max(value),
+                                final_risk = ifelse(final_risk == value, name, NA_character_),
+                                final_risk = ifelse(is.na(final_risk), NA_character_, final_risk)) %>%
+                  dplyr::ungroup() %>%
+                  dplyr::reframe(huc12, final_risk) %>%
+                  na.omit()
+
+    custom_pp_thresholds <- custom_pp_thresholds %>%
+                            dplyr::left_join(final_risk)
+
+  } else if (indicator == 'barrier'){
+
+    final_risk <- custom_pp_thresholds %>%
+      tidyr::pivot_longer(c(fa, far, fur)) %>%
+      dplyr::group_by(huc12) %>%
+      dplyr::mutate(final_risk = max(value),
+                    final_risk = ifelse(final_risk == value, name, NA_character_),
+                    final_risk = ifelse(is.na(final_risk), NA_character_, final_risk)) %>%
+      dplyr::ungroup() %>%
+      dplyr::reframe(huc12, final_risk) %>%
+      na.omit()
+
+    custom_pp_thresholds <- custom_pp_thresholds %>%
+      dplyr::left_join(final_risk)
+
+  } else {
+
+    message('Incorrect `indicator` argument, try "temperature", "sediment", "barriers", etc')
   }
 
   custom_pp_thresholds
@@ -72,8 +111,8 @@ proportion_function <- function(data, indicator) {
 
            for(i in 1:length(data)){
              fa <- sum(data[,i] < 0.1)/nrow(data)
-             far <- sum(data[,i] >= 0.1 & data[,i] < 0.3)/nrow(data)
-             fur <- sum(data[,i] > 0.3)/nrow(data)
+             far <- sum(data[,i] >= 0.1 & data[,i] < 0.25)/nrow(data)
+             fur <- sum(data[,i] > 0.25)/nrow(data)
 
              ratings[i,'fa'] <- fa
              ratings[i,'far'] <- far
@@ -87,6 +126,20 @@ proportion_function <- function(data, indicator) {
              fa <- sum(data[,i] < 12)/nrow(data)
              far <- sum(data[,i] >= 12 & data[,i] < 15)/nrow(data)
              fur <- sum(data[,i] > 15)/nrow(data)
+
+             ratings[i,'fa'] <- fa
+             ratings[i,'far'] <- far
+             ratings[i,'fur'] <- fur
+             ratings[i, 'id'] <- i
+           }
+         },
+         barrier = {
+           ratings <- data.frame(fa = vector(), far = vector(), fur = vector(), id = vector())
+
+           for(i in 1:length(data)){
+             fa <- sum(data[,i] < 10)/nrow(data)
+             far <- sum(data[,i] >= 10 & data[,i] < 30)/nrow(data)
+             fur <- sum(data[,i] > 20)/nrow(data)
 
              ratings[i,'fa'] <- fa
              ratings[i,'far'] <- far
@@ -144,7 +197,36 @@ skewed <-function (x, na.rm = TRUE,type=3) {
 
 #' Get Bull Trout Baseline HUCs
 #'
+#' @description
+#' This function returns BTB HUCs with associated [GRAIP_Lite](https://research.fs.usda.gov/rmrs/products/dataandtools/datasets/road-density-proximity-and-erosion-data-and-stability-index)
+#' attributes for Nation-wide Model Runs (Region 1) and dominant geology \insertCite{vuke2015geologic}{btbr}.
+#'
 #' @param usfs A logical.
+#'
+#' @details
+#' The dataset attributes includes:
+#'
+#' \strong{GRAIP_Lite}: These attributes were accessed from \insertCite{nelson2021graiplite}{btbr} and use the `WCATT_HUCs_GL_Data_USC_Units_R01` layer.
+#' \itemize{
+#' \item \strong{HUC_12} Hydrological Unit Code 12.
+#' \item  \strong{specdelFS_NFSA} Sediment delivered per Square Mile in Standard tons per year per square mile (t/yr/sq.mi) on National Forest Systems Land.
+#' \item  \strong{specdel} Sediment delivered per Square Mile in Standard tons per year per square mile (t/yr/sq.mi) in HUC12.
+#' \item  \strong{sdelFS} Sediment delivered in Standard tons per year on National Forest Systems Land.
+#' \item  \strong{sdel} Sediment delivered in Standard tons per year in HUC12.
+#' \item  \strong{tlenFS} Road length in miles on National Forest Systems Land.
+#' \item  \strong{tlen} Road lenght in miles in HUC12.
+#' \item  \strong{FS_Land_sqmi} Area in Square Miles of National Forest Systems Land intersecting HUC12.
+#' \item  \strong{HUC12_sqmi} HUC 12 Area in Square Miles.
+#' \item \strong{fs_percent_land} Percentage of HUC12 that is National Forest Systems Land.
+#' }
+#' \strong{Geology}: These values are taken from \insertCite{vuke2015geologic}{btbr}.
+#' \itemize{
+#' \item \strong{ig_or_not}: Intersecting a coarse geology map by parent material and taking highest proportion (sedimentary and granitic).
+#' }
+#' @export
+#' @references {
+#' \insertAllCited{}
+#' }
 #'
 #' @return A sf MULTIPOLYGON.
 #' @export

@@ -1,12 +1,23 @@
 
 #' Fit Bayesian Linear Model
+#' @description
 #'
-#' @param btbr_rs A previously created \link[btbr_sediment_randomsamples]{btbr} object.
+#' This function fits a \link[brms]{brm} model (see details below) to previously created \link[btbr]{btbr_sediment_randomsamples}.
+#' @param btbr_rs A previously created \link[btbr]{btbr_sediment_randomsamples} object.
 #' @param linear Logical. Whether to run without spline or not, TRUE (default).
 #' @return A `brmsfit` model object.
+#' @details
+#' Below are the model parameter priors for the linear model. The nonlinear model using flat priors only.
+#' \deqn{Y_i \sim \text{Beta}(\mu_i, \phi) \\
+#' \text{logit}(\mu_i) = \beta_0 + \beta_1\text{Natural} + \beta_2\text{Roads} + \beta_3\text{Geology} \\
+#' \beta_0=\text{Normal}(0,1) \\
+#' \beta_1,\beta_2=\text{Normal}(0,2) \\
+#' \beta_3=\text{Normal}(0,1) \\
+#' \phi = \text{Gamma}(0.01, 0.01)}
 #'
 #' @export
 #' @examples
+#' \dontrun{
 #' data <- btbr_tss()
 #'
 #' granitic_dist <- btbr_batch_distribution(data %>% dplyr::filter(geology == 'Granitic'),
@@ -21,14 +32,27 @@
 #' btbr_rs <- btbr_sediment_randomsamples(usfs = TRUE,
 #'                                        sedimentary_dist = sedimentary_dist[['lpearson']],
 #'                                        granitic_dist = granitic_dist[['lognorm']])
-#' btbr_sedmod <- btbr_brm(btbr_rs)
+#'
+#' btbr_sedmod <- btbr_brm_sediment(btbr_rs)
+#' }
 
 btbr_brm_sediment <- function(btbr_rs, linear = TRUE) {
 
+
+
 if(linear){
+
+  priors.weak <- c(
+    prior(normal(0,1), class = 'Intercept'),
+    prior(normal(0,2), class = 'b', coef = 'spec_delFS'),
+    prior(normal(0,2), class = 'b', coef = 'natural_erosion'),
+    prior(normal(0,1), class = 'b', coef = 'ig_or_notsedimentary')
+  )
+
   sed_mod <- brms::brm(
     proportion ~ spec_delFS + natural_erosion + ig_or_not,
     family = brms::Beta(),
+    prior = priors.weak,
     data = btbr_rs
   )
 
@@ -76,8 +100,8 @@ if(linear){
 
 btbr_sediment_randomsamples <- function(usfs = TRUE, sedimentary_dist, granitic_dist) {
 
-
-  btb_hucs <- btbr_hucs(usfs = usfs)
+  btb_hucs <- btbr_hucs(usfs = usfs) %>%
+              dplyr::filter(fs_percent_land >= 0.05)
 
   set.seed(1234)
 
@@ -86,13 +110,13 @@ btbr_sediment_randomsamples <- function(usfs = TRUE, sedimentary_dist, granitic_
   sed_sim <- dplyr::tibble(spec_delFS = ifelse(btb_hucs$ig_or_not == 'sedimentary',
                                         {b <- btb_hucs$tlenFS
                                         error <- rnorm(nhucs, sd = 1/(b+0.001))
-                                        a <- btb_hucs$specdelFS_HA*1000*14*error
-                                        (btb_hucs$specdelFS_HA*1000*14 + a)*0.00285497 # converting to tons and using sedimentary geologic base rate from GRAIP_Lite
+                                        a <- btb_hucs$specsdelFS_jur_fs*14*error
+                                        (btb_hucs$specsdelFS_jur_fs*14 + a) # converting to tons and using sedimentary geologic base rate from GRAIP_Lite
                                         },{
                                           b <- btb_hucs$tlenFS
                                           error <- rnorm(nhucs, sd = 1/(b+0.001))
-                                          a <- btb_hucs$specdelFS_HA*1000*21*error
-                                          (btb_hucs$specdelFS_HA*1000*21.3 + a)*0.00285497 # converting to tons and using granitic geologic base rate from GRAIP_Lite
+                                          a <- btb_hucs$specsdelFS_jur_fs*21.3*error
+                                          (btb_hucs$specsdelFS_jur_fs*21.3 + a) # converting to tons and using granitic geologic base rate from GRAIP_Lite
                                         }),
                     natural_erosion = ifelse(btb_hucs$ig_or_not == 'sedimentary',
                                       smwrBase::rlpearsonIII(10000,
@@ -111,8 +135,8 @@ btbr_sediment_randomsamples <- function(usfs = TRUE, sedimentary_dist, granitic_
 
                     og_spec = ifelse(
                                      btb_hucs$ig_or_not == 'sedimentary',
-                                     btb_hucs$specdelFS_HA*1000*14*0.00285497, # converting to tons and using sedimentary geologic base rate from GRAIP_Lite
-                                     btb_hucs$specdelFS_HA*1000*21.3*0.00285497 # converting to tons and using granitic geologic base rate from GRAIP_Lite
+                                     btb_hucs$specsdelFS_jur_fs*14, # converting to tons and using sedimentary geologic base rate from GRAIP_Lite
+                                     btb_hucs$specsdelFS_jur_fs*21.3 # converting to tons and using granitic geologic base rate from GRAIP_Lite
                                      )
                                     ) %>%
                                       dplyr::mutate(

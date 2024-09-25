@@ -4,12 +4,14 @@
 \alias{btbr_pp}
 \title{Get Posterior Predictive (PP)}
 \usage{
-btbr_pp(data, btbr_brm, indicator)
+btbr_pp(data, btbr_brm, indicator, ...)
 }
 \arguments{
 \item{btbr_brm}{A previously created \link[btbr_brm]{brbr} model.}
 
 \item{indicator}{A character defining the type of indicator, e.g. 'sediment', 'temperature'.}
+
+\item{...}{Arguments to pass to \link[posterior_predict]{brms}.}
 
 \item{A}{data.frame with appropriate covariates to predict with from previous model, e.g. \code{natural_erosion}, \code{spec_delFS}, \code{ig_or_not}, etc.}
 }
