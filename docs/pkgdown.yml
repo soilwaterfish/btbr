@@ -1,11 +1,12 @@
-pandoc: 3.1.1
+pandoc: 3.1.11
 pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
-  final_scores: integrated.html
-  hss: developing_sediment.html
-  sssc: stream_temperature.html
-last_built: 2024-07-22T17:32Z
+  developing_sediment: developing_sediment.html
+  integrated: integrated.html
+  stream_temperature: stream_temperature.html
+  targets: targets.html
+last_built: 2025-04-22T15:48Z
 urls:
   reference: https://github.com/soilwaterfish/btbr/reference
   article: https://github.com/soilwaterfish/btbr/articles

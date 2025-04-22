@@ -1,36 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://github.com/soilwaterfish/aisrisk/404.html</loc>
+    <loc>https://github.com/soilwaterfish/btbr/404.html</loc>
   </url>
   <url>
-    <loc>https://github.com/soilwaterfish/aisrisk/articles/final_scores.html</loc>
+    <loc>https://github.com/soilwaterfish/btbr/articles/developing_sediment.html</loc>
   </url>
   <url>
-    <loc>https://github.com/soilwaterfish/aisrisk/articles/hss.html</loc>
+    <loc>https://github.com/soilwaterfish/btbr/articles/index.html</loc>
   </url>
   <url>
-    <loc>https://github.com/soilwaterfish/aisrisk/articles/index.html</loc>
+    <loc>https://github.com/soilwaterfish/btbr/articles/integrated.html</loc>
   </url>
   <url>
-    <loc>https://github.com/soilwaterfish/aisrisk/articles/sssc.html</loc>
+    <loc>https://github.com/soilwaterfish/btbr/articles/stream_temperature.html</loc>
   </url>
   <url>
-    <loc>https://github.com/soilwaterfish/aisrisk/authors.html</loc>
+    <loc>https://github.com/soilwaterfish/btbr/articles/targets.html</loc>
   </url>
   <url>
-    <loc>https://github.com/soilwaterfish/aisrisk/DISCLAIMER.html</loc>
+    <loc>https://github.com/soilwaterfish/btbr/articles/targets_files/pipeline.html</loc>
   </url>
   <url>
-    <loc>https://github.com/soilwaterfish/aisrisk/index.html</loc>
+    <loc>https://github.com/soilwaterfish/btbr/authors.html</loc>
   </url>
   <url>
-    <loc>https://github.com/soilwaterfish/aisrisk/LICENSE-text.html</loc>
+    <loc>https://github.com/soilwaterfish/btbr/DISCLAIMER.html</loc>
   </url>
   <url>
-    <loc>https://github.com/soilwaterfish/aisrisk/LICENSE.html</loc>
+    <loc>https://github.com/soilwaterfish/btbr/index.html</loc>
   </url>
   <url>
-    <loc>https://github.com/soilwaterfish/aisrisk/reference/index.html</loc>
+    <loc>https://github.com/soilwaterfish/btbr/LICENSE-text.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/LICENSE.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/node_modules/gdal-next/deps/libgdal/gdal/ogr/ogrsf_frmts/geojson/libjson/README.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/node_modules/gdal-next/node_modules/@mapbox/node-pre-gyp/lib/util/nw-pre-gyp/index.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/btbr_aop.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/btbr_batch_distribution.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/btbr_brm_sediment.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/btbr_brm_temperature.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/btbr_fnfdata.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/btbr_granitic.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/btbr_hucs.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/btbr_knfdata.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/btbr_norwest_temperature.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/btbr_pp.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/btbr_sediment_randomsamples.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/btbr_temphuc_intersection.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/btbr_tss.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/index.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/proportion_function.html</loc>
+  </url>
+  <url>
+    <loc>https://github.com/soilwaterfish/btbr/reference/skewed.html</loc>
   </url>
 </urlset>
