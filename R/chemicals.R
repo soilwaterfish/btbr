@@ -1,3 +1,14 @@
+#' Get WCC
+#' @description
+#' Uses corporate SDE to get most recent Watershed Condition Class (WCC) information.
+#'
+#'
+#' @param conda_path r'{C:\Program Files\ArcGIS\Pro\bin\Python\envs\arcgispro-py3}'
+#'
+#' @return data.frame with Watershed Condition Class information about R1.
+#' @export
+#'
+#' @examples
 get_wcc <- function(conda_path = r'{C:\Program Files\ArcGIS\Pro\bin\Python\envs\arcgispro-py3}'){
 
   reticulate::use_condaenv(conda_path)
