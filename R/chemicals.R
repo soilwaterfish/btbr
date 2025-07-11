@@ -3,9 +3,9 @@
 #' Uses corporate SDE to get most recent Watershed Condition Class (WCC) information.
 #'
 #'
-#' @param conda_path r'{C:\Program Files\ArcGIS\Pro\bin\Python\envs\arcgispro-py3}'
+#' @param conda_path A path to an arcgispro-py3 conda env.
 #'
-#' @return data.frame with Watershed Condition Class information about R1.
+#' @return data.frame with WCC attributes in R1.
 #' @export
 #'
 #' @examples

@@ -10,10 +10,10 @@ get_wcc(
 )
 }
 \arguments{
-\item{conda_path}{r'{C:\Program Files\ArcGIS\Pro\bin\Python\envs\arcgispro-py3}'}
+\item{conda_path}{A path to an arcgispro-py3 conda env.}
 }
 \value{
-data.frame with Watershed Condition Class information about R1.
+data.frame with WCC attributes in R1.
 }
 \description{
 Uses corporate SDE to get most recent Watershed Condition Class (WCC) information.

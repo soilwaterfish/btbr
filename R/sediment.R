@@ -53,7 +53,7 @@ if(linear){
     proportion ~ spec_delFS + natural_erosion + ig_or_not,
     family = brms::Beta(),
     prior = priors.weak,
-    data = btbr_rs
+    data = btbr_rs,backend = 'cmdstanr'
   )
 
 } else {

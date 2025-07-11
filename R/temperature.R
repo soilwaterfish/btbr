@@ -1,16 +1,37 @@
-
-#' Fit Bayesian Linear Model
+#' Fit Bayesian Linear Model with Measurement Error
 #'
-#' @param tempdata A NorWest Stream Temperature data.frame with `S1_93_11` column name.
+#' @param tempdata A NorWest Stream Temperature data.frame with `S1_93_11` and `S22_PredSE` columns.
 #' @return A `brmsfit` model object.
 #'
+#' @details
+#' This model accounts for measurement error in the covariate \eqn{X_i = \texttt{S1\_93\_11}_i} using its estimated standard error \eqn{\sigma_i = \texttt{S22\_PredSE}_i}. When \eqn{\sigma_i \leq 0} or missing, it is replaced with a default value of 1.
+#'
+#' The measurement error model is specified using the \code{me()} function in \pkg{brms}, which treats the observed covariate as noisy:
+#'
+#' \deqn{
+#' X_i^{\text{obs}} \sim \mathcal{N}(X_i^{\text{true}}, \sigma_i) \\
+#' \log(Y_i) \sim \mathcal{N}(\beta_0 + \beta_1 X_i^{\text{true}}, \sigma)
+#' }
+#'
+#' Where:
+#' \itemize{
+#'   \item \eqn{X_i^{\text{obs}}} is the observed value of the covariate (\code{S1_93_11})
+#'   \item \eqn{\sigma_i} is the known standard error from \code{S22_PredSE}
+#'   \item \eqn{X_i^{\text{true}}} is the unobserved true covariate
+#'   \item \eqn{Y_i} is the outcome (also \code{S1_93_11}, log-transformed)
+#' }
+#'
+#' The priors are:
+#' \deqn{
+#' \beta_0 \sim \mathcal{N}(\mu, 0.025) \\
+#' \sigma \sim \mathcal{N}(\sigma_{\log}, 0.025)
+#' }
+#'
+#' Here, \eqn{\mu} and \eqn{\sigma_{\log}} are computed from the mean and variance of the observed data, transformed to log scale to match the \code{lognormal} modeling assumption.
 #' @export
 #' @examples
-#'
 #' spokoot <- fishguts::get_NorWestStreams('SpoKoot') %>% st_as_sf()
-#'
-#' huc_comid <-  read.csv('data/comid_huc12.csv')
-#'
+#' huc_comid <- read.csv('data/comid_huc12.csv')
 #' spokoot_df <- dplyr::left_join(huc_comid, by = c('COMID' = 'comid')) %>%
 #'   dplyr::filter(!is.na(huc12)) %>%
 #'   sf::st_drop_geometry() %>%
@@ -20,28 +41,42 @@
 
 btbr_brm_temperature <- function(tempdata){
 
-  mean <- mean(tempdata[['S1_93_11']], na.rm = T)
-  variance <- var(tempdata[['S1_93_11']], na.rm = T)
+  # Clean the standard errors: replace -9999 or negative with 1
+  tempdata <- tempdata %>%
+    dplyr::mutate(
+      S22_PredSE = ifelse(S22_PredSE <= 0, 1, S22_PredSE)
+    )
 
-  sigma <- sqrt(log(variance / mean ^ 2 + 1))
+  # Store means for prior estimates
+  mean_y <- mean(tempdata[['S1_93_11']], na.rm = TRUE)
+  var_y <- var(tempdata[['S1_93_11']], na.rm = TRUE)
 
-  # and plugging in sigma into our first equation, mu becomes
-  mu <- log(mean) - sigma ^ 2 / 2
+  sigma_log <- sqrt(log(var_y / mean_y^2 + 1))
+  mu_log <- log(mean_y) - sigma_log^2 / 2
 
-  mod_data <- brms::brm(value ~1,
-                              data = dplyr::tibble(value = mean),
-                              family = brms::lognormal(),
-                              prior = c(eval(call("prior",
-                                                  sprintf("normal(%f, %f)", round(mu[1], 4), 0.025),
-                                                  class = "Intercept")), eval(call("prior",
-                                                                                   sprintf("normal(%f, %f)", round(sigma[1], 4), 0.025),
-                                                                                   class = "sigma"))),
-                              sample_prior = "only",
-                              seed = 1234,
+  # Set up data with 'me' column for measurement error
+  model_data <- dplyr::tibble(
+    Y = tempdata[['S1_93_11']],
+    X = tempdata[['S1_93_11']],
+    X_se = tempdata[['S22_PredSE']]
   )
 
-  mod_data
+  # Fit brms model with measurement error in X
+  mod_data <- brms::brm(
+    formula = bf(log(Y) ~ 1 + me(X, X_se), sigma ~ 1),
+    data = model_data,
+    family = gaussian(),
+    prior = c(
+      prior(normal(mu_log, 0.025), class = Intercept),
+      prior(normal(sigma_log, 0.025), class = sigma)
+    ),
+    sample_prior = "only",
+    seed = 1234
+  )
+
+  return(mod_data)
 }
+
 
 #' Temp Helper
 #'
