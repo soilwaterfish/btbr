@@ -1,4 +1,4 @@
-#' Fit Bayesian Linear Model with Measurement Error
+#' Fit Bayesian Linear Model with Prediction Error
 #'
 #' @param tempdata A NorWest Stream Temperature data.frame with `S1_93_11` and `S22_PredSE` columns.
 #' @return A `brmsfit` model object.

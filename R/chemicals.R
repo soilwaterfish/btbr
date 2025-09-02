@@ -33,3 +33,4 @@ get_wcc <- function(conda_path = r'{C:\Program Files\ArcGIS\Pro\bin\Python\envs\
   df = arcgis.features$GeoAccessor$from_featureclass("wcc") %>% select(-SHAPE)
 
 }
+

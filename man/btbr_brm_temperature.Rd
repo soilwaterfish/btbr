@@ -2,25 +2,48 @@
 % Please edit documentation in R/temperature.R
 \name{btbr_brm_temperature}
 \alias{btbr_brm_temperature}
-\title{Fit Bayesian Linear Model}
+\title{Fit Bayesian Linear Model with Measurement Error}
 \usage{
 btbr_brm_temperature(tempdata)
 }
 \arguments{
-\item{tempdata}{A NorWest Stream Temperature data.frame with \code{S1_93_11} column name.}
+\item{tempdata}{A NorWest Stream Temperature data.frame with \code{S1_93_11} and \code{S22_PredSE} columns.}
 }
 \value{
 A \code{brmsfit} model object.
 }
 \description{
-Fit Bayesian Linear Model
+Fit Bayesian Linear Model with Measurement Error
+}
+\details{
+This model accounts for measurement error in the covariate \eqn{X_i = \texttt{S1\_93\_11}_i} using its estimated standard error \eqn{\sigma_i = \texttt{S22\_PredSE}_i}. When \eqn{\sigma_i \leq 0} or missing, it is replaced with a default value of 1.
+
+The measurement error model is specified using the \code{me()} function in \pkg{brms}, which treats the observed covariate as noisy:
+
+\deqn{
+X_i^{\text{obs}} \sim \mathcal{N}(X_i^{\text{true}}, \sigma_i) \\
+\log(Y_i) \sim \mathcal{N}(\beta_0 + \beta_1 X_i^{\text{true}}, \sigma)
+}
+
+Where:
+\itemize{
+\item \eqn{X_i^{\text{obs}}} is the observed value of the covariate (\code{S1_93_11})
+\item \eqn{\sigma_i} is the known standard error from \code{S22_PredSE}
+\item \eqn{X_i^{\text{true}}} is the unobserved true covariate
+\item \eqn{Y_i} is the outcome (also \code{S1_93_11}, log-transformed)
+}
+
+The priors are:
+\deqn{
+\beta_0 \sim \mathcal{N}(\mu, 0.025) \\
+\sigma \sim \mathcal{N}(\sigma_{\log}, 0.025)
+}
+
+Here, \eqn{\mu} and \eqn{\sigma_{\log}} are computed from the mean and variance of the observed data, transformed to log scale to match the \code{lognormal} modeling assumption.
 }
 \examples{
-
 spokoot <- fishguts::get_NorWestStreams('SpoKoot') \%>\% st_as_sf()
-
-huc_comid <-  read.csv('data/comid_huc12.csv')
-
+huc_comid <- read.csv('data/comid_huc12.csv')
 spokoot_df <- dplyr::left_join(huc_comid, by = c('COMID' = 'comid')) \%>\%
   dplyr::filter(!is.na(huc12)) \%>\%
   sf::st_drop_geometry() \%>\%

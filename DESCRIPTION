@@ -17,7 +17,6 @@ Imports:
   arcgislayers
 Depends: 
   evd,
-  smwrBase,
   brms
 License: MIT + file LICENSE
 Encoding: UTF-8

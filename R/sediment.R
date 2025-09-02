@@ -119,7 +119,7 @@ btbr_sediment_randomsamples <- function(usfs = TRUE, sedimentary_dist, granitic_
                                           (btb_hucs$specsdelFS_jur_fs*21.3 + a) # converting to tons and using granitic geologic base rate from GRAIP_Lite
                                         }),
                     natural_erosion = ifelse(btb_hucs$ig_or_not == 'sedimentary',
-                                      smwrBase::rlpearsonIII(10000,
+                                      rlpearsonIII(10000,
                                                              meanlog = as.numeric(sedimentary_dist$estimate['meanlog']),
                                                              sdlog = as.numeric(sedimentary_dist$estimate['sdlog']),
                                                              skew = as.numeric(sedimentary_dist$estimate['skew'])),
