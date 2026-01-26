@@ -2,7 +2,7 @@
 % Please edit documentation in R/temperature.R
 \name{btbr_brm_temperature}
 \alias{btbr_brm_temperature}
-\title{Fit Bayesian Linear Model with Measurement Error}
+\title{Fit Bayesian Linear Model with Prediction Error}
 \usage{
 btbr_brm_temperature(tempdata)
 }
@@ -13,7 +13,7 @@ btbr_brm_temperature(tempdata)
 A \code{brmsfit} model object.
 }
 \description{
-Fit Bayesian Linear Model with Measurement Error
+Fit Bayesian Linear Model with Prediction Error
 }
 \details{
 This model accounts for measurement error in the covariate \eqn{X_i = \texttt{S1\_93\_11}_i} using its estimated standard error \eqn{\sigma_i = \texttt{S22\_PredSE}_i}. When \eqn{\sigma_i \leq 0} or missing, it is replaced with a default value of 1.

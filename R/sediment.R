@@ -407,7 +407,7 @@ btbr_knfdata <- function() {
     'Trout Creek', 2008, 10282,
     'Trout Creek', 2009, 3257,
     'Trout Creek', 2010, 10413,
-    'Trout Creek', 2011, 10262,
+    'Trout Creek', 2011, 5948,
     'Trout Creek', 2012, 12613,
     'Trout Creek', 2013, 4161,
     'Trout Creek', 2014, 8300,
