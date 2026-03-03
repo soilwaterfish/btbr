@@ -14,7 +14,6 @@
 #' @return A data.frame.
 #' @export
 #'
-#' @examples
 btbr_pp <- function(data, btbr_brm, indicator, ...) {
 
   data <- data %>% dplyr::mutate(id = dplyr::row_number())
@@ -23,8 +22,17 @@ btbr_pp <- function(data, btbr_brm, indicator, ...) {
 
   custom_pp_thresholds <- proportion_function(predictions, indicator = indicator)
 
-  custom_pp_thresholds <- dplyr::left_join(data, custom_pp_thresholds) %>%
+  if(indicator == 'temperature') {
+
+    custom_pp_thresholds <- custom_pp_thresholds %>% dplyr::summarise(dplyr::across(dplyr::everything(), ~mean(.))) %>%
+      dplyr::select(-id) %>%
+      dplyr::bind_cols(data)
+
+  } else {
+
+     custom_pp_thresholds <- dplyr::left_join(data, custom_pp_thresholds) %>%
                           dplyr::select(-id)
+  }
 
   if(indicator == 'sediment'){
   final_risk <- custom_pp_thresholds %>%
@@ -37,12 +45,12 @@ btbr_pp <- function(data, btbr_brm, indicator, ...) {
                 fur = ifelse(is.na(proportion), NA_real_, fur)
                 ) %>%
                 tidyr::pivot_longer(c(fa, far, fur)) %>%
-                dplyr::group_by(huc12) %>%
+                dplyr::group_by(HUC_12) %>%
                 dplyr::mutate(final_risk = max(value),
                               final_risk = ifelse(final_risk == value, name, NA_character_),
                               final_risk = ifelse(is.na(final_risk), NA_character_, final_risk)) %>%
                 dplyr::ungroup() %>%
-                dplyr::reframe(huc12, final_risk) %>%
+                dplyr::reframe(HUC_12, final_risk) %>%
                 na.omit()
 
 
@@ -60,12 +68,12 @@ btbr_pp <- function(data, btbr_brm, indicator, ...) {
 
     final_risk <- custom_pp_thresholds %>%
                   tidyr::pivot_longer(c(fa, far, fur)) %>%
-                  dplyr::group_by(huc12) %>%
+                  dplyr::group_by(HUC_12) %>%
                   dplyr::mutate(final_risk = max(value),
                                 final_risk = ifelse(final_risk == value, name, NA_character_),
                                 final_risk = ifelse(is.na(final_risk), NA_character_, final_risk)) %>%
                   dplyr::ungroup() %>%
-                  dplyr::reframe(huc12, final_risk) %>%
+                  dplyr::reframe(HUC_12, final_risk) %>%
                   na.omit()
 
     custom_pp_thresholds <- custom_pp_thresholds %>%

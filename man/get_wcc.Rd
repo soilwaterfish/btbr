@@ -5,6 +5,7 @@
 \title{Get WCC}
 \usage{
 get_wcc(
+  local = TRUE,
   conda_path =
     "C:\\\\Program Files\\\\ArcGIS\\\\Pro\\\\bin\\\\Python\\\\envs\\\\arcgispro-py3"
 )

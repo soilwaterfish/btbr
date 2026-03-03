@@ -4,9 +4,11 @@
 \alias{btbr_norwest_temperature}
 \title{Get NorWest}
 \usage{
-btbr_norwest_temperature(filter_geom, ...)
+btbr_norwest_temperature(local = TRUE, filter_geom, ...)
 }
 \arguments{
+\item{local}{logical. Whether to use the data that comes with the package.}
+
 \item{filter_geom}{an object of class bbox, sfc or sfg used to filter query results based on a predicate function.}
 
 \item{...}{Arguments to pass to \code{arc_select}, see \link[arcgislayers]{arc_select}.}

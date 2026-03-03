@@ -1,76 +1,111 @@
-#' Fit Bayesian Linear Model with Prediction Error
+#' Fit Bayesian Distribution Model with Known Prediction Error
 #'
 #' @param tempdata A NorWest Stream Temperature data.frame with `S1_93_11` and `S22_PredSE` columns.
 #' @return A `brmsfit` model object.
 #'
 #' @details
-#' This model accounts for measurement error in the covariate \eqn{X_i = \texttt{S1\_93\_11}_i} using its estimated standard error \eqn{\sigma_i = \texttt{S22\_PredSE}_i}. When \eqn{\sigma_i \leq 0} or missing, it is replaced with a default value of 1.
+#' This model characterizes the distribution of stream temperatures while accounting for
+#' known prediction standard errors from the NorWest model. The goal is to generate a
+#' posterior predictive distribution that can be used for probabilistic inference
+#' (e.g., P(temperature > threshold)) rather than point estimates with confidence intervals.
 #'
-#' The measurement error model is specified using the \code{me()} function in \pkg{brms}, which treats the observed covariate as noisy:
+#' When \eqn{\sigma_i \leq 0} or missing, it is replaced with a default value of 1.
+#'
+#' The model uses the \code{mi()} function in \pkg{brms} to incorporate known measurement
+#' error on the response variable:
 #'
 #' \deqn{
-#' X_i^{\text{obs}} \sim \mathcal{N}(X_i^{\text{true}}, \sigma_i) \\
-#' \log(Y_i) \sim \mathcal{N}(\beta_0 + \beta_1 X_i^{\text{true}}, \sigma)
+#' Y_i^{\text{obs}} \sim \mathcal{N}(Y_i^{\text{true}}, \sigma_i^{\text{pred}}) \\
+#' \log(Y_i^{\text{true}}) \sim \mathcal{N}(\mu, \sigma)
 #' }
 #'
 #' Where:
 #' \itemize{
-#'   \item \eqn{X_i^{\text{obs}}} is the observed value of the covariate (\code{S1_93_11})
-#'   \item \eqn{\sigma_i} is the known standard error from \code{S22_PredSE}
-#'   \item \eqn{X_i^{\text{true}}} is the unobserved true covariate
-#'   \item \eqn{Y_i} is the outcome (also \code{S1_93_11}, log-transformed)
+#'   \item \eqn{Y_i^{\text{obs}}} is the observed/predicted stream temperature (\code{S1_93_11})
+#'   \item \eqn{\sigma_i^{\text{pred}}} is the known prediction standard error (\code{S22_PredSE})
+#'   \item \eqn{Y_i^{\text{true}}} is the unobserved true temperature
+#'   \item \eqn{\mu} is the mean of the log-transformed true temperatures
+#'   \item \eqn{\sigma} is the standard deviation of the log-transformed true temperatures
 #' }
 #'
-#' The priors are:
+#' The posterior distribution accounts for both:
+#' \itemize{
+#'   \item Natural variability in stream temperatures across hydrological units (\eqn{\sigma})
+#'   \item Prediction uncertainty from the NorWest model (\eqn{\sigma_i^{\text{pred}}})
+#' }
+#'
+#' The priors are derived from the empirical distribution of observed data:
 #' \deqn{
-#' \beta_0 \sim \mathcal{N}(\mu, 0.025) \\
-#' \sigma \sim \mathcal{N}(\sigma_{\log}, 0.025)
+#' \mu \sim \mathcal{N}(\hat{\mu}_{\log}, 2 \cdot \hat{\sigma}_{\log}) \\
+#' \sigma \sim \text{Student-t}(3, 0, \hat{\sigma}_{\log})
 #' }
 #'
-#' Here, \eqn{\mu} and \eqn{\sigma_{\log}} are computed from the mean and variance of the observed data, transformed to log scale to match the \code{lognormal} modeling assumption.
+#' Where \eqn{\hat{\mu}_{\log}} and \eqn{\hat{\sigma}_{\log}} are computed from the mean
+#' and variance of the observed data, transformed to the log scale:
+#' \deqn{
+#' \hat{\sigma}_{\log} = \sqrt{\log\left(\frac{\text{Var}(Y)}{\bar{Y}^2} + 1\right)} \\
+#' \hat{\mu}_{\log} = \log(\bar{Y}) - \frac{\hat{\sigma}_{\log}^2}{2}
+#' }
+#'
 #' @export
 #' @examples
-#' spokoot <- fishguts::get_NorWestStreams('SpoKoot') %>% st_as_sf()
+#' \dontrun{
+#' spokoot <- fishguts::get_NorWestStreams('SpoKoot') %>% sf::st_as_sf()
 #' huc_comid <- read.csv('data/comid_huc12.csv')
-#' spokoot_df <- dplyr::left_join(huc_comid, by = c('COMID' = 'comid')) %>%
+#' spokoot_df <- spokoot %>%
+#'   dplyr::left_join(huc_comid, by = c('COMID' = 'comid')) %>%
 #'   dplyr::filter(!is.na(huc12)) %>%
 #'   sf::st_drop_geometry() %>%
 #'   dplyr::filter(S1_93_11 > 0)
 #'
 #' temp_model <- btbr_brm_temperature(spokoot_df)
-
-btbr_brm_temperature <- function(tempdata){
-
+#'
+#' # Extract posterior samples for probabilistic inference
+#' posterior_samples <- brms::posterior_predict(temp_model)
+#'
+#' # Example: P(temperature > 20)
+#' mean(posterior_samples > 20)
+#' }
+btbr_brm_temperature <- function(tempdata) {
   # Clean the standard errors: replace -9999 or negative with 1
+
   tempdata <- tempdata %>%
     dplyr::mutate(
       S22_PredSE = ifelse(S22_PredSE <= 0, 1, S22_PredSE)
     )
 
-  # Store means for prior estimates
+  # Calculate empirical moments for priors (log scale for lognormal)
   mean_y <- mean(tempdata[['S1_93_11']], na.rm = TRUE)
   var_y <- var(tempdata[['S1_93_11']], na.rm = TRUE)
-
   sigma_log <- sqrt(log(var_y / mean_y^2 + 1))
   mu_log <- log(mean_y) - sigma_log^2 / 2
 
-  # Set up data with 'me' column for measurement error
+  # Set up data with response and known prediction error
   model_data <- dplyr::tibble(
     Y = tempdata[['S1_93_11']],
-    X = tempdata[['S1_93_11']],
-    X_se = tempdata[['S22_PredSE']]
+    Y_se = tempdata[['S22_PredSE']]
   )
 
-  # Fit brms model with measurement error in X
-  mod_data <- brms::brm(
-    formula = bf(log(Y) ~ 1 + me(X, X_se), sigma ~ 1),
-    data = model_data,
-    family = gaussian(),
-    prior = c(
-      prior(normal(mu_log, 0.025), class = Intercept),
-      prior(normal(sigma_log, 0.025), class = sigma)
+  # Priors informed by empirical distribution
+  priors <- c(
+    brms::prior_string(
+      paste0("normal(", round(mu_log, 4), ", ", round(sigma_log * 2, 4), ")"),
+      class = "Intercept"
     ),
+    brms::prior_string(
+      paste0("student_t(3, 0, ", round(sigma_log, 4), ")"),
+      class = "sigma"
+    )
+  )
+
+  # Fit intercept-only model with known measurement error on response
+  mod_data <- brms::brm(
+    formula = brms::bf(Y | mi(Y_se) ~ 1),
+    data = model_data,
+    family = brms::lognormal(),
+    prior = priors,
     sample_prior = "only",
+    backend = 'rstan',
     seed = 1234
   )
 
@@ -129,7 +164,7 @@ btbr_temphuc_intersection <- function(data, btb_hucs_og) {
 #' The NorWeST NHDPlusV2 processing units include: Lahontan Basin, Northern California-Coastal Klamath, Utah, Coastal California, Central California, Colorado, New Mexico, Arizona, and Black Hills.
 #'
 #' `Copyright Text:` U.S. Forest Service; Rocky Mountain Research Station; Air, Water, and Aquatic Environments Program (AWAE). [](https://www.fs.usda.gov/rm/boise/awae_home.shtml)
-#'
+#' @param local logical. Whether to use the data that comes with the package.
 #' @param filter_geom an object of class bbox, sfc or sfg used to filter query results based on a predicate function.
 #' @param ... Arguments to pass to `arc_select`, see \link[arcgislayers]{arc_select}.
 #' @references {
@@ -138,7 +173,16 @@ btbr_temphuc_intersection <- function(data, btb_hucs_og) {
 #' @return A sf object.
 #' @export
 #'
-btbr_norwest_temperature <- function(filter_geom, ...) {
+btbr_norwest_temperature <- function(local = TRUE, filter_geom, ...) {
+
+
+  if(local) {
+
+
+    return(sf::read_sf(system.file('data/btb_data.gpkg',package = 'btbr'), layer = 'wmt_norwest_nhd'))
+
+
+  }
 
   url <- arcgislayers::arc_open('https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_NorWeST_StreamTemperatures_01/MapServer/2')
 

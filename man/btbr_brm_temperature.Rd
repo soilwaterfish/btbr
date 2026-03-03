@@ -2,7 +2,7 @@
 % Please edit documentation in R/temperature.R
 \name{btbr_brm_temperature}
 \alias{btbr_brm_temperature}
-\title{Fit Bayesian Linear Model with Prediction Error}
+\title{Fit Bayesian Distribution Model with Known Prediction Error}
 \usage{
 btbr_brm_temperature(tempdata)
 }
@@ -13,41 +13,68 @@ btbr_brm_temperature(tempdata)
 A \code{brmsfit} model object.
 }
 \description{
-Fit Bayesian Linear Model with Prediction Error
+Fit Bayesian Distribution Model with Known Prediction Error
 }
 \details{
-This model accounts for measurement error in the covariate \eqn{X_i = \texttt{S1\_93\_11}_i} using its estimated standard error \eqn{\sigma_i = \texttt{S22\_PredSE}_i}. When \eqn{\sigma_i \leq 0} or missing, it is replaced with a default value of 1.
+This model characterizes the distribution of stream temperatures while accounting for
+known prediction standard errors from the NorWest model. The goal is to generate a
+posterior predictive distribution that can be used for probabilistic inference
+(e.g., P(temperature > threshold)) rather than point estimates with confidence intervals.
 
-The measurement error model is specified using the \code{me()} function in \pkg{brms}, which treats the observed covariate as noisy:
+When \eqn{\sigma_i \leq 0} or missing, it is replaced with a default value of 1.
+
+The model uses the \code{mi()} function in \pkg{brms} to incorporate known measurement
+error on the response variable:
 
 \deqn{
-X_i^{\text{obs}} \sim \mathcal{N}(X_i^{\text{true}}, \sigma_i) \\
-\log(Y_i) \sim \mathcal{N}(\beta_0 + \beta_1 X_i^{\text{true}}, \sigma)
+Y_i^{\text{obs}} \sim \mathcal{N}(Y_i^{\text{true}}, \sigma_i^{\text{pred}}) \\
+\log(Y_i^{\text{true}}) \sim \mathcal{N}(\mu, \sigma)
 }
 
 Where:
 \itemize{
-\item \eqn{X_i^{\text{obs}}} is the observed value of the covariate (\code{S1_93_11})
-\item \eqn{\sigma_i} is the known standard error from \code{S22_PredSE}
-\item \eqn{X_i^{\text{true}}} is the unobserved true covariate
-\item \eqn{Y_i} is the outcome (also \code{S1_93_11}, log-transformed)
+\item \eqn{Y_i^{\text{obs}}} is the observed/predicted stream temperature (\code{S1_93_11})
+\item \eqn{\sigma_i^{\text{pred}}} is the known prediction standard error (\code{S22_PredSE})
+\item \eqn{Y_i^{\text{true}}} is the unobserved true temperature
+\item \eqn{\mu} is the mean of the log-transformed true temperatures
+\item \eqn{\sigma} is the standard deviation of the log-transformed true temperatures
 }
 
-The priors are:
+The posterior distribution accounts for both:
+\itemize{
+\item Natural variability in stream temperatures across hydrological units (\eqn{\sigma})
+\item Prediction uncertainty from the NorWest model (\eqn{\sigma_i^{\text{pred}}})
+}
+
+The priors are derived from the empirical distribution of observed data:
 \deqn{
-\beta_0 \sim \mathcal{N}(\mu, 0.025) \\
-\sigma \sim \mathcal{N}(\sigma_{\log}, 0.025)
+\mu \sim \mathcal{N}(\hat{\mu}_{\log}, 2 \cdot \hat{\sigma}_{\log}) \\
+\sigma \sim \text{Student-t}(3, 0, \hat{\sigma}_{\log})
 }
 
-Here, \eqn{\mu} and \eqn{\sigma_{\log}} are computed from the mean and variance of the observed data, transformed to log scale to match the \code{lognormal} modeling assumption.
+Where \eqn{\hat{\mu}_{\log}} and \eqn{\hat{\sigma}_{\log}} are computed from the mean
+and variance of the observed data, transformed to the log scale:
+\deqn{
+\hat{\sigma}_{\log} = \sqrt{\log\left(\frac{\text{Var}(Y)}{\bar{Y}^2} + 1\right)} \\
+\hat{\mu}_{\log} = \log(\bar{Y}) - \frac{\hat{\sigma}_{\log}^2}{2}
+}
 }
 \examples{
-spokoot <- fishguts::get_NorWestStreams('SpoKoot') \%>\% st_as_sf()
+\dontrun{
+spokoot <- fishguts::get_NorWestStreams('SpoKoot') \%>\% sf::st_as_sf()
 huc_comid <- read.csv('data/comid_huc12.csv')
-spokoot_df <- dplyr::left_join(huc_comid, by = c('COMID' = 'comid')) \%>\%
+spokoot_df <- spokoot \%>\%
+  dplyr::left_join(huc_comid, by = c('COMID' = 'comid')) \%>\%
   dplyr::filter(!is.na(huc12)) \%>\%
   sf::st_drop_geometry() \%>\%
   dplyr::filter(S1_93_11 > 0)
 
 temp_model <- btbr_brm_temperature(spokoot_df)
+
+# Extract posterior samples for probabilistic inference
+posterior_samples <- brms::posterior_predict(temp_model)
+
+# Example: P(temperature > 20)
+mean(posterior_samples > 20)
+}
 }

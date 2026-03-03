@@ -53,7 +53,8 @@ if(linear){
     proportion ~ spec_delFS + natural_erosion + ig_or_not,
     family = brms::Beta(),
     prior = priors.weak,
-    data = btbr_rs,backend = 'cmdstanr'
+    data = btbr_rs,
+    backend = 'rstan'
   )
 
 } else {
@@ -61,7 +62,8 @@ if(linear){
   sed_mod <- brms::brm(
     proportion ~ spec_delFS*splines::ns(natural_erosion, 2) + ig_or_not,
     family = brms::Beta(),
-    data = btbr_rs
+    data = btbr_rs,
+    backend = 'rstan'
   )
 
 }
@@ -131,7 +133,7 @@ btbr_sediment_randomsamples <- function(usfs = TRUE, sedimentary_dist, granitic_
 
                     ig_or_not = btb_hucs$ig_or_not,
 
-                    huc12 = btb_hucs$HUC_12,
+                    HUC_12 = btb_hucs$HUC_12,
 
                     og_spec = ifelse(
                                      btb_hucs$ig_or_not == 'sedimentary',

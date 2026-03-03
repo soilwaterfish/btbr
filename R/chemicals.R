@@ -8,11 +8,12 @@
 #' @return data.frame with WCC attributes in R1.
 #' @export
 #'
-#' @examples
-get_wcc <- function(conda_path = r'{C:\Program Files\ArcGIS\Pro\bin\Python\envs\arcgispro-py3}'){
+get_wcc <- function(local = TRUE, conda_path = r'{C:\Program Files\ArcGIS\Pro\bin\Python\envs\arcgispro-py3}'){
+
+  if(missing(local)) {
 
   reticulate::use_condaenv(conda_path)
-
+  arcgisscripting <- reticulate::import('arcgisscripting')
   arcpy <- reticulate::import('arcpy')
 
   arcgis.features <- reticulate::import('arcgis.features')
@@ -31,6 +32,13 @@ get_wcc <- function(conda_path = r'{C:\Program Files\ArcGIS\Pro\bin\Python\envs\
 
   # now get the layer wcc as a pandas dataframe
   df = arcgis.features$GeoAccessor$from_featureclass("wcc") %>% select(-SHAPE)
+
+
+  } else {
+
+    read.csv(local)
+
+  }
 
 }
 
