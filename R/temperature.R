@@ -104,7 +104,7 @@ btbr_brm_temperature <- function(tempdata) {
     data = model_data,
     family = brms::lognormal(),
     prior = priors,
-    sample_prior = "only",
+    sample_prior = "yes",
     backend = 'rstan',
     seed = 1234
   )

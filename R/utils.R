@@ -83,12 +83,12 @@ btbr_pp <- function(data, btbr_brm, indicator, ...) {
 
     final_risk <- custom_pp_thresholds %>%
       tidyr::pivot_longer(c(fa, far, fur)) %>%
-      dplyr::group_by(huc12) %>%
+      dplyr::group_by(HUC_12) %>%
       dplyr::mutate(final_risk = max(value),
                     final_risk = ifelse(final_risk == value, name, NA_character_),
                     final_risk = ifelse(is.na(final_risk), NA_character_, final_risk)) %>%
       dplyr::ungroup() %>%
-      dplyr::reframe(huc12, final_risk) %>%
+      dplyr::reframe(HUC_12, final_risk) %>%
       na.omit()
 
     custom_pp_thresholds <- custom_pp_thresholds %>%
